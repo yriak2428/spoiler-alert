@@ -1,1 +1,0 @@
-INSERT INTO public.items (item_name, quantity, description, expiry_date, storage_location, item_status, user_id) VALUES ('bread', 1, 'brot', CAST('2026-04-01' AS date), 'CABINET', 'safe', '48cd04fc-a5b7-46ea-8431-69314d2ea5f8');
