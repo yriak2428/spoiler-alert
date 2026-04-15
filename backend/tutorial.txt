@@ -1,0 +1,59 @@
+from fastapi import FastAPI, Response, status, HTTPException
+from fastapi.params import Body
+from pydantic import BaseModel
+from typing import Optional
+import os
+from dotenv import load_dotenv, dotenv_values
+
+load_dotenv()
+app = FastAPI()
+
+#pydantic basemodel class does data validation
+class Post(BaseModel):
+    title: str
+    content: str
+    published: bool = True #default value
+    rating: Optional[int] = None #defaults to None so value can be empty
+
+my_posts = [{ "id": 1, "title": "Post 1", "content": "Content of Post 1",}, {"id": 2, "title": "Post 2", "content": "Content of Post 2"}]
+
+@app.get("/")
+async def hello():
+    return {"message": "Hello World"}
+
+@app.post("/posts", status_code = status.HTTP_201_CREATED) #Create
+async def create_post(post: Post):
+    print(post)
+    post_dict = post.dict() #turns pydantic model into a python dictionary
+    post_dict["id"] = len(my_posts) + 1
+    my_posts.append(post_dict)
+    return {"data": post_dict}
+
+@app.get("/posts") #Read All Post
+async def get_posts():
+    return {"data": my_posts}
+
+@app.get("/posts/{id}") #Read Single Post
+#path parameter "id" is always a str
+async def get_post(id: int):
+    for p in my_posts:
+        if p["id"] == id:
+            return {"post": p}
+    raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail = f"post with id: {id} was not found")
+
+@app.delete("/posts/{id}", status_code = status.HTTP_204_NO_CONTENT) #Delete
+async def delete_post(id: int):
+    for i, p in enumerate(my_posts):
+        if p["id"] == id:
+            my_posts.pop(i)
+            return Response(status_code = status.HTTP_204_NO_CONTENT)
+    raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail = f"post with id: {id} was not found")
+
+@app.put("/posts/{id}")
+async def update_post(id: int, post: Post):
+    for i, p in enumerate(my_posts):
+        if p["id"] == id:
+            my_posts[i] = post.dict()
+            my_posts[i]["id"] = id 
+            return {"data": my_posts[i]}
+    raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail = f"post with id: {id} was not found")
