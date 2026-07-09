@@ -76,7 +76,7 @@ def identify_with_gemini(image_bytes: bytes, mime_type: str):
 
             Return only a short product name.
             Do not explain.
-            If you cannot identify it, return Unknown product.
+            If unable to identify, return "Unknown product".
             """
         ],
     )

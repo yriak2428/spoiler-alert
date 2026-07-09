@@ -3,10 +3,17 @@ import { Ionicons } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
 import { useState } from "react";
 import { Modal, Text, TextInput, TouchableOpacity, View } from "react-native";
-import { buttonItemStyles } from "../assets/styles/home.style";
+
+//comment out whichever is needed depending on which style to pick
+//kurt's style
+import { componentStyles } from "../assets/styles/add.item.style";
+//Valerie's style
+// import { buttonItemStyles } from "../assets/styles/home.style";
+
 
 const AddItem = () => {
-    const styles = buttonItemStyles();
+    // const styles = buttonItemStyles();
+    const styles = componentStyles();
 
     const [isModalVisible, setVisible] = useState(false);
     const [newItem, setNewItem] = useState({

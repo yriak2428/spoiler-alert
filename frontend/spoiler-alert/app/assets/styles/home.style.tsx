@@ -40,7 +40,7 @@ export const buttonItemStyles = () => {
         },
         modalButton: {
             borderWidth: 1,
-            borderColor: "#d1e0f2",
+            borderColor: "#dins1e0f2",
             padding: 5, 
             backgroundColor: '#FFFFFF',
             borderRadius: 16,
