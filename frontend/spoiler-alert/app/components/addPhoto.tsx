@@ -28,15 +28,52 @@ const AddPhoto = () => {
 
         if (result?.uri){
             setPhoto(result.uri);
-            setPreviewVisible(true); 
-            setVisible(false);        
-        } 
+            setPreviewVisible(true);
+            setVisible(false);
+        }
     }
 
     const handleRetake = () => {
         setPhoto(null);
         setPreviewVisible(false);
-        setVisible(true); 
+        setVisible(true);
+    }
+
+    // Barcode Scanning
+    const [scanned, setScanned] = useState(false);
+    const [scannedProduct, setScannedProduct] = useState<any>(null);
+
+    const lookupProduct = async (barcode: string) => {
+        try {
+            const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${barcode}.json`);
+            const json = await res.json();
+
+            if (json.status === 1) {
+                const product = json.product;
+                setScannedProduct({
+                    barcode,
+                    name: product.product_name || "Unknown item",
+                    category: product.categories || "",
+                    imageUrl: product.image_url || null,
+                });
+                // TODO: insert into Supabase products table here
+            } else {
+                setScannedProduct({ barcode, name: "Not found", category: "", imageUrl: null });
+            }
+        } catch (err) {
+            console.error("Open Food Facts lookup failed:", err);
+        }
+    }
+
+    const handleBarcodeScanned = ({ data }: { data: string }) => {
+        if (scanned) return;
+        setScanned(true);
+        lookupProduct(data);
+    }
+
+    const resetScanner = () => {
+        setScanned(false);
+        setScannedProduct(null);
     }
         
     return (
@@ -61,8 +98,24 @@ const AddPhoto = () => {
                     ) : (
                         <View style={{flex: 1}}>
                             {/* Camera */}
-                            <CameraView style={styles.cameraView} facing={facing} ref={cameraRef} />
-
+                           <CameraView
+                                style={styles.cameraView}
+                                facing={facing}
+                                ref={cameraRef}
+                                barcodeScannerSettings={{
+                                    barcodeTypes: ["ean13", "ean8", "upc_a", "upc_e"],
+                                }}
+                                onBarcodeScanned={scanned ? undefined : handleBarcodeScanned}
+                            />
+                            {scannedProduct && (
+                                <View style={{ position: 'absolute', bottom: 100, left: 20, right: 20, backgroundColor: 'white', padding: 12, borderRadius: 10 }}>
+                                    <Text style={{ fontWeight: 'bold' }}>{scannedProduct.name}</Text>
+                                    <Text>{scannedProduct.category}</Text>
+                                    <TouchableOpacity onPress={resetScanner} style={{ marginTop: 8 }}>
+                                        <Text style={{ color: 'blue' }}>Scan Again</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
                                 <View style={styles.topButtons}>
                                      {/* Close Button */}
                                     <TouchableOpacity style={styles.topButton} onPress={() => setVisible(false)}>
