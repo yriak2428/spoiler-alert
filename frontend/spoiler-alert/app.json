@@ -8,7 +8,7 @@
     "scheme": "spoileralert",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "bundleIdentifier": "com.yourteam.spoileralert",
+      "bundleIdentifier": "com.anonymous.spoileralert",
       "supportsTablet": true
     },
     "android": {
