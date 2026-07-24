@@ -10,33 +10,7 @@ import HomeDashboardSheet from '../components/homeDashboardSheet';
 import SemiDonutChart from '../components/semiDonutChart';
 import TodaysDate from '../components/todaysDate';
 import { Button, Card } from '../components/ui';
-
-// Single source of truth for the Home dashboard. Every stat, carousel, and
-// chart value below is derived from this list — nothing is hardcoded.
-type FoodStatus = keyof typeof statusColors;
-
-type FoodItem = {
-  id: string;
-  name: string;
-  category: string;
-  expiryDate: string;
-  status: FoodStatus;
-};
-
-const FOOD_ITEMS: FoodItem[] = [
-  { id: '1', name: 'Bread', category: 'Carbohydrates', expiryDate: 'Jul 25, 2026', status: 'near' },
-  { id: '2', name: 'Vegetables', category: 'Fruits and Vegetables', expiryDate: 'Jul 26, 2026', status: 'near' },
-  { id: '3', name: 'Milk', category: 'Meat and Dairy', expiryDate: 'Aug 2, 2026', status: 'safe' },
-  { id: '4', name: 'Yogurt', category: 'Meat and Dairy', expiryDate: 'Aug 5, 2026', status: 'safe' },
-  { id: '5', name: 'Eggs', category: 'Meat and Dairy', expiryDate: 'Aug 20, 2026', status: 'safe' },
-  { id: '6', name: 'Cheese', category: 'Meat and Dairy', expiryDate: 'Sep 1, 2026', status: 'safe' },
-  { id: '7', name: 'Butter', category: 'Meat and Dairy', expiryDate: 'Sep 10, 2026', status: 'safe' },
-  { id: '8', name: 'Chicken', category: 'Meat and Dairy', expiryDate: 'Jul 18, 2026', status: 'expired' },
-  { id: '9', name: 'Fish', category: 'Meat and Dairy', expiryDate: 'Jul 15, 2026', status: 'expired' },
-  { id: '10', name: 'Spinach', category: 'Fruits and Vegetables', expiryDate: 'Jul 10, 2026', status: 'expired' },
-  { id: '11', name: 'Strawberries', category: 'Fruits and Vegetables', expiryDate: 'Jul 20, 2026', status: 'expired' },
-  { id: '12', name: 'Leftover Rice', category: 'Carbohydrates', expiryDate: 'Jul 12, 2026', status: 'expired' },
-];
+import { FoodItem, FoodStatus, useFoodItems, addFoodItem } from '../components/foodData'; 
 
 const CATEGORY_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
   'Fruits and Vegetables': 'leaf-outline',
@@ -91,11 +65,12 @@ const FoodCarousel = ({
 
 const Home = () => {
   const styles = homePageStyles();
+  const foodItems = useFoodItems();
 
-  const pantryCount = FOOD_ITEMS.length;
-  const nearItems = FOOD_ITEMS.filter((i) => i.status === 'near');
-  const safeItems = FOOD_ITEMS.filter((i) => i.status === 'safe');
-  const expiredItems = FOOD_ITEMS.filter((i) => i.status === 'expired');
+  const fridgeCount = foodItems.length;
+  const nearItems = foodItems.filter((i) => i.status === 'near');
+  const safeItems = foodItems.filter((i) => i.status === 'safe');
+  const expiredItems = foodItems.filter((i) => i.status === 'expired');
   const wasteCount = expiredItems.length;
   const statusCounts = { safe: safeItems.length, near: nearItems.length, expired: expiredItems.length };
 
@@ -134,8 +109,8 @@ const Home = () => {
         <Card>
           <View style={styles.statsRow}>
             <View style={styles.statTile}>
-              <Text style={styles.statLabel}>Food in Pantry</Text>
-              <Text style={styles.statValue}>{pantryCount}</Text>
+              <Text style={styles.statLabel}>Food in Fridge</Text>
+              <Text style={styles.statValue}>{fridgeCount}</Text>
             </View>
             <View style={styles.statTile}>
               <Text style={styles.statLabel}>Food Wasted</Text>
@@ -158,9 +133,9 @@ const Home = () => {
           <SemiDonutChart counts={statusCounts} />
         </Card>
 
+        <FoodCarousel title="Near Expiry" status="near" items={nearItems} styles={styles} />
         <FoodCarousel title="Safe" status="safe" items={safeItems} styles={styles} />
         <FoodCarousel title="Expired" status="expired" items={expiredItems} styles={styles} />
-
         <Card>
           <View style={styles.recipeRow}>
             <View style={styles.recipeImagePlaceholder}>

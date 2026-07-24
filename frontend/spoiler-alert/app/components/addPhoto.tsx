@@ -160,7 +160,6 @@ const AddPhoto = forwardRef<AddPhotoHandle, Props>(({ hideTrigger }, ref) => {
                     )}
                 </View>
             </Modal>
-
             <Modal
                 id="modal scan preview"
                 visible={isPreviewVisible}
