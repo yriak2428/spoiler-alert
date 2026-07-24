@@ -55,6 +55,24 @@ async def generate_and_store_recipe(
     must_use = [item["item_name"] for item in pantry_items if item.get("item_rank") in [1, 2, 3]]
     other_available = [item["item_name"] for item in pantry_items if item["item_name"] not in must_use]
 
+    # 2.5 Fetch user profile preferences (dietary restrictions & cultural preferences)
+    profile_response = (
+        db.table("profiles")
+        .select("dietary_restrictions, cultural_preferences")
+        .eq("user_id", user_id)
+        .execute()
+    )
+    profile_data = profile_response.data[0] if profile_response.data else {}
+    dietary_restrictions = profile_data.get("dietary_restrictions") or []
+    cultural_preferences = profile_data.get("cultural_preferences") or []
+
+    # Build preference instructions for the prompt
+    pref_instructions = ""
+    if dietary_restrictions:
+        pref_instructions += f"\n- DIETARY RESTRICTIONS (strict): The recipe MUST strictly respect these dietary restrictions: {', '.join(dietary_restrictions)}. Do not include any ingredients that violate these restrictions."
+    if cultural_preferences:
+        pref_instructions += f"\n- CULTURAL/CUISINE PREFERENCES (preferred): Prioritize or align the style of the recipe with these culinary preferences: {', '.join(cultural_preferences)}."
+
     # 3. Call Gemini using the Structured Output API
     api_key:str = os.getenv("GEMINI_API_KEY")
     if not api_key:
@@ -70,6 +88,7 @@ async def generate_and_store_recipe(
         OPTIONAL BUT AVAILABLE (other items in the fridge): {', '.join(other_available)}
         
         Feel free to add common pantry staples (like salt, oil, pepper, water) to complete the recipe, but prioritize using all of the MUST USE ingredients.
+        {pref_instructions}
         """
 
         response = client.models.generate_content(
@@ -92,10 +111,23 @@ async def generate_and_store_recipe(
         )
 
     # 5. Store the recipe in Supabase
+    pantry_names = [item["item_name"].lower() for item in pantry_items]
+    
+    db_ingredients = []
+    for ing in generated_recipe.ingredients:
+        ing_lower = ing.name.lower()
+        # Check if the ingredient name matches any pantry item name, or vice versa
+        is_owned = any(name in ing_lower or ing_lower in name for name in pantry_names)
+        db_ingredients.append({
+            "name": ing.name,
+            "amount": ing.amount,
+            "owned": is_owned
+        })
+
     recipe_db_entry = {
         "user_id": user_id,
         "title": generated_recipe.title,
-        "ingredients": [ing.model_dump() for ing in generated_recipe.ingredients],
+        "ingredients": db_ingredients,
         "instructions": generated_recipe.instructions,
         "image_url": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=400&q=80" # Placeholder or DALL-E/Unsplash query
     }
