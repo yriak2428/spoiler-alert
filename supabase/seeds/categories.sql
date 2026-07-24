@@ -122,3 +122,9 @@ INSERT INTO auth.identities (
   now(),
   now()
 ) ON CONFLICT (id) DO NOTHING;
+
+-- 3. Update profile preferences for dev@example.com
+UPDATE public.profiles 
+SET dietary_restrictions = ARRAY['dairy-free'], 
+    cultural_preferences = ARRAY['Western', 'Italian']
+WHERE user_id = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
